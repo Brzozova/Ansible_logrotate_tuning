@@ -1,0 +1,3 @@
+logrotate_conf_dir: "/etc/logrotate.d/"
+hourly_logrotate_conf_dir: "/etc/logrotate.hourly.d/"
+logrotate_scripts: []

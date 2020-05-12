@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+
+{% for conf in item.confs %}
+{% for path in conf.paths -%}
+{{ path }}
+{% endfor -%}
+{
+  {% if conf.options is defined -%}
+  {% for option in conf.options -%}
+  {{ option }}
+  {% endfor -%}
+  {% endif %}
+  {%- if conf.scripts is defined -%}
+  {%- for name, script in conf.scripts.iteritems() -%}
+  {{ name }}
+    {{ script }}
+  endscript
+  {% endfor -%}
+  {% endif -%}
+}
+{% endfor -%} 

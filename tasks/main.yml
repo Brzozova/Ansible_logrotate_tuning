@@ -1,0 +1,79 @@
+---
+- name: Install logrotate
+  apt: pkg=logrotate state=present
+  when: logrotate_scripts is defined and logrotate_scripts|length > 0
+
+- name: Setup logrotate.d scripts
+  template:
+    src: logrotate.d.j2
+    dest: "{{ logrotate_conf_dir }}{{ item.name }}"
+  with_items: "{{ logrotate_scripts }}"
+  when: logrotate_scripts is defined
+
+# This is to add logrotate configuration with proper dateformat.
+# Only for logrotate trigger more than once a day.
+- name: Check logrotate version
+  block:
+    - name: check logrotate
+      command: logrotate --version | grep logrotate*
+      register: logs_version
+
+    - block:
+      - debug:
+          var: logs_version.stderr_lines
+
+      - set_fact: 
+          logrotate_version: "{{ logs_version.stderr_lines }}"
+      when: ansible_distribution_release != 'buster'
+
+    - block:
+        - debug:
+            var: logs_version.stdout_lines[0]
+
+        - set_fact: 
+            logrotate_version: "{{ logs_version.stdout_lines[0] }}"
+      when: ansible_distribution_release == 'buster'
+
+    - debug:
+        msg: "{{ logrotate_version | regex_replace('[^0-9\\.]', '') }}"
+
+    - set_fact: 
+        logrotate_ver: "{{ logrotate_version | regex_replace('[^0-9\\.]', '') }}"
+
+    - name: Set up logrotate trigger hourly
+      block:
+        - name: Create directory for logrotate scripts
+          file:
+            path: /etc/logrotate.hourly.d
+            state: directory
+            mode: '644'
+
+        - name: Create logrotate configuration
+          blockinfile:
+            path: /etc/logrotate.hourly.conf
+            block: |
+              include /etc/logrotate.hourly.d
+            create: yes
+            mode: '644'
+          notify: Restart cron
+
+        - name: Create cron configuration
+          template:
+            src: cron_logrotate.j2
+            dest: /etc/cron.hourly/logrotate
+            mode: '775'
+          notify: Restart cron
+
+        - name: Setup logrotate.d scripts for hourly
+          template:
+            src: logrotate.d.j2
+            dest: "{{ hourly_logrotate_conf_dir }}{{ item.name }}"
+            mode: '644'
+          with_items: "{{ hourly_logrotate_scripts }}"
+          ignore_errors: yes
+
+      tags: hourly_logs
+
+  when: hourly_logrotate is defined and hourly_logrotate
+  tags: hourly_logs
+
