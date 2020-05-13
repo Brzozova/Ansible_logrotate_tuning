@@ -6,10 +6,15 @@
 
 `hourly_logrotate_scripts`: A list of logrotate scripts and directives for hourly rotation.
 
-name - The name of the script that goes into /etc/logrotate.d/ or /etc/logrotate.hourly.d/
-paths - Path to point logrotate to for the log rotation
-options - List of directives for logrotate, view the logrotate man page for specifics
-scripts - Dict of scripts for logrotate (see Example below)
+
+`name` - The name of the script that goes into `/etc/logrotate.d/` or `/etc/logrotate.hourly.d/`
+
+`paths` - Path to point logrotate to for the log rotation
+
+`options` - List of directives for logrotate, view the logrotate man page for specifics
+
+`scripts` - Dict of scripts for logrotate (see Example below)
+
 
 ## Standard logrotate configuration
 Typical logrotate configuration set up in group_vars or host_vars for specific server/group of servers:
